@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test("download returns CSV with correct headers", async ({ page }) => {
   const response = await page.request.get("/api/admin/signups", {
-    headers: { Authorization: "Bearer local-admin-token" },
+    headers: { Authorization: `Bearer ${process.env.ADMIN_TOKEN ?? "local-admin-token"}` },
   });
 
   expect(response.status()).toBe(200);

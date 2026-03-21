@@ -15,7 +15,7 @@ test("wrong password shows error", async ({ page }) => {
 test("correct password reveals download button", async ({ page }) => {
   await page.goto("/admin");
 
-  await page.getByPlaceholder("Password").fill("local-admin-token");
+  await page.getByPlaceholder("Password").fill(process.env.ADMIN_TOKEN ?? "local-admin-token");
   await page.getByRole("button", { name: "Sign In" }).click();
 
   await expect(
