@@ -1,0 +1,22 @@
+{
+  "name": "turnkey-infra",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy",
+    "diff": "cdk diff",
+    "synth": "cdk synth"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-amplify-alpha": "^2.182.0-alpha.0",
+    "aws-cdk-lib": "^2.182.0",
+    "constructs": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "aws-cdk": "^2.182.0",
+    "typescript": "^5"
+  }
+}
