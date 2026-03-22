@@ -31,7 +31,28 @@ export async function GET(req: NextRequest) {
     ssmError = String(e);
   }
 
-  const allKeys = Object.keys(process.env).sort();
+  const amplifyListener = {
+    enabled: process.env.AWS_AMPLIFY_CREDENTIAL_LISTENER_ENABLED,
+    host: process.env.AWS_AMPLIFY_CREDENTIAL_LISTENER_HOST,
+    port: process.env.AWS_AMPLIFY_CREDENTIAL_LISTENER_PORT,
+    path: process.env.AWS_AMPLIFY_CREDENTIAL_LISTENER_PATH,
+    timeout: process.env.AWS_AMPLIFY_CREDENTIAL_LISTENER_TIMEOUT,
+    deploymentId: process.env.AWS_AMPLIFY_DEPLOYMENT_ID,
+    metadataApi: process.env.AWS_LAMBDA_METADATA_API,
+  };
 
-  return NextResponse.json({ authHeaderReceived: !!auth, awsVars, ssmResult, ssmError, allKeys });
+  // Try fetching credentials directly from the listener
+  let listenerResult: unknown = null;
+  let listenerError: string | null = null;
+  if (amplifyListener.host && amplifyListener.port && amplifyListener.path) {
+    try {
+      const url = `http://${amplifyListener.host}:${amplifyListener.port}${amplifyListener.path}`;
+      const res = await fetch(url);
+      listenerResult = { status: res.status, body: await res.text() };
+    } catch (e) {
+      listenerError = String(e);
+    }
+  }
+
+  return NextResponse.json({ awsVars, amplifyListener, listenerResult, listenerError, ssmResult, ssmError });
 }
