@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
     "@aws-sdk/client-ses",
     "@aws-sdk/client-ssm",
   ],
+  serverRuntimeConfig: {
+    ADMIN_TOKEN: process.env.ADMIN_TOKEN ?? "",
+  },
 };
 
 export default nextConfig;

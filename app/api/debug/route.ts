@@ -54,5 +54,18 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ awsVars, amplifyListener, listenerResult, listenerError, ssmResult, ssmError });
+  const standaloneConfig = process.env.__NEXT_PRIVATE_STANDALONE_CONFIG
+    ? JSON.parse(process.env.__NEXT_PRIVATE_STANDALONE_CONFIG)
+    : {};
+  const serverRuntimeConfig = standaloneConfig.serverRuntimeConfig ?? {};
+
+  return NextResponse.json({
+    awsVars,
+    amplifyListenerEnabled: amplifyListener.enabled,
+    ssmError,
+    standaloneConfigKeys: Object.keys(standaloneConfig),
+    serverRuntimeConfigKeys: Object.keys(serverRuntimeConfig),
+    adminTokenInRuntimeConfig: !!serverRuntimeConfig.ADMIN_TOKEN,
+    adminTokenLength: serverRuntimeConfig.ADMIN_TOKEN?.length ?? 0,
+  });
 }
