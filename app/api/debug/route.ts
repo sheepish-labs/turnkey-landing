@@ -31,5 +31,7 @@ export async function GET(req: NextRequest) {
     ssmError = String(e);
   }
 
-  return NextResponse.json({ authHeaderReceived: !!auth, awsVars, ssmResult, ssmError });
+  const allKeys = Object.keys(process.env).sort();
+
+  return NextResponse.json({ authHeaderReceived: !!auth, awsVars, ssmResult, ssmError, allKeys });
 }
