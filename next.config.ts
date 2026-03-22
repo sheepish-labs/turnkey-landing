@@ -7,9 +7,9 @@ const nextConfig: NextConfig = {
     "@aws-sdk/client-ses",
     "@aws-sdk/client-ssm",
   ],
-  serverRuntimeConfig: {
-    ADMIN_TOKEN: process.env.ADMIN_TOKEN ?? "",
-  },
+  // Custom field — baked at build time, readable via __NEXT_PRIVATE_STANDALONE_CONFIG at runtime
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ...(({ runtimeSecrets: { ADMIN_TOKEN: process.env.ADMIN_TOKEN ?? "" } } as any)),
 };
 
 export default nextConfig;
