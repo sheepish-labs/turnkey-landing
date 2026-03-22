@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PutCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { ulid } from "ulid";
-import { dynamo, TABLE_NAME } from "@/lib/dynamo";
+import { dynamo, getTableName } from "@/lib/dynamo";
 import { sendNotificationEmail } from "@/lib/email";
 
 const VALID_ROLES = ["agent", "buyer", "seller", "brokerage"] as const;
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
   const existing = await dynamo.send(
     new ScanCommand({
-      TableName: TABLE_NAME,
+      TableName: getTableName(),
       FilterExpression: "email = :email",
       ExpressionAttributeValues: { ":email": normalizedEmail },
     })
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
   await dynamo.send(
     new PutCommand({
-      TableName: TABLE_NAME,
+      TableName: getTableName(),
       Item: {
         id: ulid(),
         email: normalizedEmail,

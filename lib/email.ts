@@ -1,6 +1,17 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import { getRuntimeSecrets } from "./runtime-config";
 
-const ses = new SESClient({ region: process.env.AWS_REGION ?? "us-east-1" });
+function makeSesClient() {
+  const secrets = getRuntimeSecrets();
+  const accessKeyId = secrets.APP_AWS_ACCESS_KEY_ID || process.env.APP_AWS_ACCESS_KEY_ID;
+  const secretAccessKey = secrets.APP_AWS_SECRET_ACCESS_KEY || process.env.APP_AWS_SECRET_ACCESS_KEY;
+  return new SESClient({
+    region: process.env.AWS_REGION ?? "us-east-1",
+    ...(accessKeyId && secretAccessKey
+      ? { credentials: { accessKeyId, secretAccessKey } }
+      : {}),
+  });
+}
 
 export async function sendNotificationEmail({
   email,
@@ -11,8 +22,9 @@ export async function sendNotificationEmail({
   name: string;
   role: string;
 }) {
-  const from = process.env.SES_FROM_ADDRESS!;
-  const to = process.env.SES_NOTIFY_ADDRESS!;
+  const secrets = getRuntimeSecrets();
+  const from = secrets.SES_FROM_ADDRESS || process.env.SES_FROM_ADDRESS!;
+  const to = secrets.SES_NOTIFY_ADDRESS || process.env.SES_NOTIFY_ADDRESS!;
 
   if (process.env.SES_SANDBOX === "true") {
     console.log(`[dev] email skipped — would have sent to ${to}:`, {
@@ -23,6 +35,7 @@ export async function sendNotificationEmail({
     return;
   }
 
+  const ses = makeSesClient();
   await ses.send(
     new SendEmailCommand({
       Source: from,

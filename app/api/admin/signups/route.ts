@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ScanCommand } from "@aws-sdk/lib-dynamodb";
-import { dynamo, TABLE_NAME } from "@/lib/dynamo";
+import { dynamo, getTableName } from "@/lib/dynamo";
+import { getRuntimeSecrets } from "@/lib/runtime-config";
 
 export async function GET(req: NextRequest) {
   const auth = req.headers.get("authorization");
   const token = auth?.replace("Bearer ", "").trim();
+  const { ADMIN_TOKEN } = getRuntimeSecrets();
 
-  if (!token || token !== process.env.ADMIN_TOKEN) {
+  if (!token || token !== ADMIN_TOKEN) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await dynamo.send(new ScanCommand({ TableName: TABLE_NAME }));
+  const result = await dynamo.send(new ScanCommand({ TableName: getTableName() }));
   const items = (result.Items ?? []).sort((a, b) =>
     String(a.submittedAt).localeCompare(String(b.submittedAt))
   );
