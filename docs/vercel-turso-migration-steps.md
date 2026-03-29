@@ -108,7 +108,7 @@ All 6 tests should pass.
 - [x] 1a. CDK stack destroyed
 - [x] 1b. IAM user `turnkey-web-app` deleted
 - [x] 1c. Amplify app deleted
-- [ ] 2. Turso database created and schema applied
+- [x] 2. Turso database created and schema applied
 - [ ] 3. Vercel project linked and env vars set
 - [ ] 4. GitHub secrets added
 - [ ] 5. DNS updated to Vercel
