@@ -1,15 +1,12 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
-import { getRuntimeSecrets } from "./runtime-config";
 
 function makeSesClient() {
-  const secrets = getRuntimeSecrets();
-  const accessKeyId = secrets.APP_AWS_ACCESS_KEY_ID || process.env.APP_AWS_ACCESS_KEY_ID;
-  const secretAccessKey = secrets.APP_AWS_SECRET_ACCESS_KEY || process.env.APP_AWS_SECRET_ACCESS_KEY;
   return new SESClient({
     region: process.env.AWS_REGION ?? "us-east-1",
-    ...(accessKeyId && secretAccessKey
-      ? { credentials: { accessKeyId, secretAccessKey } }
-      : {}),
+    credentials: {
+      accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY!,
+    },
   });
 }
 
@@ -22,12 +19,8 @@ export async function sendNotificationEmail({
   name: string;
   role: string;
 }) {
-  const secrets = getRuntimeSecrets();
-  const from = secrets.SES_FROM_ADDRESS || process.env.SES_FROM_ADDRESS!;
-  const to = secrets.SES_NOTIFY_ADDRESS || process.env.SES_NOTIFY_ADDRESS!;
-
   if (process.env.SES_SANDBOX === "true") {
-    console.log(`[dev] email skipped — would have sent to ${to}:`, {
+    console.log(`[dev] email skipped — would have sent to ${process.env.SES_NOTIFY_ADDRESS}:`, {
       email,
       name,
       role,
@@ -38,8 +31,8 @@ export async function sendNotificationEmail({
   const ses = makeSesClient();
   await ses.send(
     new SendEmailCommand({
-      Source: from,
-      Destination: { ToAddresses: [to] },
+      Source: process.env.SES_FROM_ADDRESS!,
+      Destination: { ToAddresses: [process.env.SES_NOTIFY_ADDRESS!] },
       Message: {
         Subject: { Data: "New TurnKey early access request" },
         Body: {

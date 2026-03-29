@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PutCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { ulid } from "ulid";
-import { dynamo, getTableName } from "@/lib/dynamo";
+import { db } from "@/lib/db";
 import { sendNotificationEmail } from "@/lib/email";
 
 const VALID_ROLES = ["agent", "buyer", "seller", "brokerage"] as const;
@@ -27,33 +26,22 @@ export async function POST(req: NextRequest) {
 
   const normalizedEmail = String(email).toLowerCase().trim();
 
-  const existing = await dynamo.send(
-    new ScanCommand({
-      TableName: getTableName(),
-      FilterExpression: "email = :email",
-      ExpressionAttributeValues: { ":email": normalizedEmail },
-    })
-  );
+  const existing = await db.execute({
+    sql: "SELECT id FROM signups WHERE email = ?",
+    args: [normalizedEmail],
+  });
 
-  if (existing.Items && existing.Items.length > 0) {
+  if (existing.rows.length > 0) {
     return NextResponse.json(
       { message: "You're already on the list." },
       { status: 409 }
     );
   }
 
-  await dynamo.send(
-    new PutCommand({
-      TableName: getTableName(),
-      Item: {
-        id: ulid(),
-        email: normalizedEmail,
-        name: String(name).trim(),
-        role,
-        submittedAt: new Date().toISOString(),
-      },
-    })
-  );
+  await db.execute({
+    sql: "INSERT INTO signups (id, email, name, role, submitted_at) VALUES (?, ?, ?, ?, ?)",
+    args: [ulid(), normalizedEmail, String(name).trim(), role, new Date().toISOString()],
+  });
 
   sendNotificationEmail({ email: normalizedEmail, name, role }).catch((err) => {
     console.error("[email] failed to send notification", err);

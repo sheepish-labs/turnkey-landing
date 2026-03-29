@@ -1,20 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ScanCommand } from "@aws-sdk/lib-dynamodb";
-import { dynamo, getTableName } from "@/lib/dynamo";
-import { getRuntimeSecrets } from "@/lib/runtime-config";
+import { db } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   const auth = req.headers.get("authorization");
   const token = auth?.replace("Bearer ", "").trim();
-  const { ADMIN_TOKEN } = getRuntimeSecrets();
 
-  if (!token || token !== ADMIN_TOKEN) {
+  if (!token || token !== process.env.ADMIN_TOKEN) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await dynamo.send(new ScanCommand({ TableName: getTableName() }));
-  const items = (result.Items ?? []).sort((a, b) =>
-    String(a.submittedAt).localeCompare(String(b.submittedAt))
+  const result = await db.execute(
+    "SELECT id, email, name, role, submitted_at FROM signups ORDER BY submitted_at ASC"
   );
 
   const escape = (v: unknown) =>
@@ -22,8 +18,8 @@ export async function GET(req: NextRequest) {
 
   const csv = [
     ["id", "email", "name", "role", "submittedAt"].join(","),
-    ...items.map((item) =>
-      [item.id, item.email, item.name, item.role, item.submittedAt]
+    ...result.rows.map((row) =>
+      [row.id, row.email, row.name, row.role, row.submitted_at]
         .map(escape)
         .join(",")
     ),
