@@ -14,9 +14,6 @@ jobs:
     env:
       TURSO_DATABASE_URL: "file:/tmp/test.db"
       ADMIN_TOKEN: ci-admin-token
-      SES_FROM_ADDRESS: noreply@turnkeyhomes.app
-      SES_NOTIFY_ADDRESS: kelli@sheepishlabs.com
-      SES_SANDBOX: "true"
 
     steps:
       - uses: actions/checkout@v4
